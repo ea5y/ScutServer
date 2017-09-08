@@ -54,6 +54,11 @@ namespace ZyGames.Framework.Game.Contract
             UserId = roleUser.GetUserId();
         }
 
+        public SessionUser(BaseUser user,bool isNew)
+        {
+            UserId = user.GetUserId();
+        }
+
         /// <summary>
         /// 
         /// </summary>

@@ -18,38 +18,86 @@ namespace GameServer.CsScript.Action
         public string Password;
     }
 
+    public class LoginDataRes
+    {
+        public string SessionId;
+
+        public UserData UserData;
+    }
+
     public class Action1002 : BaseStruct
     {
         private LoginData _loginData;
         private GameUser _gameUser;
 
+        private UserData _userData;
+        private LoginDataRes _loginDataRes;
         public Action1002(ActionGetter actionGetter) : base(ActionID.Login, actionGetter)
         {
         }
 
         public override bool TakeAction()
         {
-            var usersCache = new ShareCacheStruct<Users>();
-            var user = usersCache.Find(u => u.Username == _loginData.Username );
-            if(user == null)
+            //Current = GameSession.CreateNew(Guid.NewGuid());
+            //Current.SetExpired();
+
+            User user;
+            ShareCacheStruct<User> userCache;
+            if(this.FindUser(out user, out userCache))
             {
-                var gameuser = new GameUser() { UserId = (int)usersCache.GetNextNo(), NickName = _loginData.Username, Hp = 100 };
-                new PersonalCacheStruct<GameUser>().Add(gameuser);
-
-                user = new Users();
-                user.UserId = gameuser.UserId;
-                user.Username = _loginData.Username;
-                user.Password = _loginData.Password;
-                usersCache.Add(user);
-
-                _gameUser = gameuser;
+                _userData = this.GetUserData(user);
             }
             else
             {
-                var gameuserCache = new PersonalCacheStruct<GameUser>();
-                _gameUser = gameuserCache.Find(user.UserId.ToString(), gu => gu.UserId == user.UserId);
+                user = this.CreateUser(userCache);
+                _userData = this.GetUserData(user);
             }
+
+            if(_userData != null)
+            {
+                var sessionUser = new SessionUser(_userData);
+                var session = GameSession.Get(Current.SessionId);
+                if(session != null)
+                {
+                    session.Bind(sessionUser);
+                }
+            }
+
+            _loginDataRes = new LoginDataRes() { SessionId = Current.SessionId, UserData = _userData };
             return true;
+        }
+
+        private bool FindUser(out User user, out ShareCacheStruct<User> userCache)
+        {
+            userCache = new ShareCacheStruct<User>();
+            user = userCache.Find(u => u.Username == _loginData.Username );
+
+            //@TODO
+            //Authentication
+
+            return user != null;
+        }
+
+        private User CreateUser(ShareCacheStruct<User> userCache)
+        {
+            var userData = new UserData() { UserId = (int)userCache.GetNextNo(), NickName = _loginData.Username, Hp = 100 };
+            _userData = userData;
+            new PersonalCacheStruct<UserData>().Add(userData);
+
+            var user = new User();
+            user.UserId = userData.UserId;
+            user.Username = _loginData.Username;
+            user.Password = _loginData.Password;
+            userCache.Add(user);
+
+            return user;
+        }
+
+        private UserData GetUserData(User user)
+        {
+            var userDataCache = new PersonalCacheStruct<UserData>();
+            var userData = userDataCache.Find(user.UserId.ToString(), ud => user.UserId == user.UserId);
+            return userData;
         }
 
         public override bool GetUrlElement()
@@ -64,7 +112,7 @@ namespace GameServer.CsScript.Action
 
         public override void BuildPacket()
         {
-            PushIntoStack( JsonConvert.SerializeObject(_gameUser));
+            PushIntoStack(JsonConvert.SerializeObject(_loginDataRes));
         }
     }
 }

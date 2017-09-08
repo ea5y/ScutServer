@@ -94,7 +94,7 @@ namespace ZyGames.Framework.Game.Service
         /// <summary>
         /// 当前游戏会话
         /// </summary>
-        public GameSession Current { get; internal set; }
+        public GameSession Current { get; set; }
 
         /// <summary>
         /// 

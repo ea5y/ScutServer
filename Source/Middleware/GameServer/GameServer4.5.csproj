@@ -76,6 +76,8 @@
     <Compile Include="Script\CsScript\Action\Action1002.cs" />
     <Compile Include="Script\CsScript\Action\ActionID.cs" />
     <Compile Include="Script\Model\GameUser.cs" />
+    <Compile Include="Script\Model\User.cs" />
+    <Compile Include="Script\Model\UserData.cs" />
     <Compile Include="Script\Model\Users.cs" />
     <None Include="GameServer.exe.config" />
     <None Include="Script\CsScript\Locale\SimplifiedLanguage.cs">

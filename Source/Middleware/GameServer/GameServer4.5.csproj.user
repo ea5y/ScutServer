@@ -5,7 +5,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
     <StartAction>Program</StartAction>
-    <StartProgram>E:\project\Scut\Source\Middleware\GameServer\GameServer.exe</StartProgram>
-    <StartWorkingDirectory>E:\project\Scut\Source\Middleware\GameServer\</StartWorkingDirectory>
+    <StartProgram>E:\project\ScutServer\Source\Middleware\GameServer\GameServer.exe</StartProgram>
+    <StartWorkingDirectory>E:\project\ScutServer\Source\Middleware\GameServer\</StartWorkingDirectory>
   </PropertyGroup>
 </Project>

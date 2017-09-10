@@ -9,6 +9,7 @@ using ScutGameServer.Model;
 using Newtonsoft.Json;
 using ZyGames.Framework.Game.Service;
 using ZyGames.Framework.Net;
+using ZyGames.Framework.RPC.Sockets;
 
 namespace GameServer.CsScript.Action
 {
@@ -41,6 +42,7 @@ namespace GameServer.CsScript.Action
             //Current = GameSession.CreateNew(Guid.NewGuid());
             //Current.SetExpired();
 
+			Test();
             User user;
             ShareCacheStruct<User> userCache;
             if(this.FindUser(out user, out userCache))
@@ -114,5 +116,15 @@ namespace GameServer.CsScript.Action
         {
             PushIntoStack(JsonConvert.SerializeObject(_loginDataRes));
         }
+
+
+		private void Test()
+		{
+			byte[] data = Encoding.UTF8.GetBytes("This is sent to the client data.");
+			Current.SendAsync(OpCode.Text, data, 0, data.Length, asyncResult => 
+					{
+						Console.WriteLine("The results of data send:{0}", asyncResult.Result == ResultCode.Success ? "ok" : "fail");
+					});
+		}
     }
 }

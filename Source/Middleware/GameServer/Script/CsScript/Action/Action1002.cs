@@ -124,7 +124,7 @@ namespace GameServer.CsScript.Action
 			Current.SendAsync(OpCode.Text, data, 0, data.Length, asyncResult => 
 					{
 						Console.WriteLine("The results of data send:{0}", asyncResult.Result == ResultCode.Success ? "ok" : "fail");
-					});
+					}).Wait();
 		}
     }
 }

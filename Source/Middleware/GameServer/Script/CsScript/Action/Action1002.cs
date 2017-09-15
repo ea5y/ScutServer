@@ -10,26 +10,13 @@ using Newtonsoft.Json;
 using ZyGames.Framework.Game.Service;
 using ZyGames.Framework.Net;
 using ZyGames.Framework.RPC.Sockets;
+using GameServer.CsScript.CommunicationDataStruct;
 
 namespace GameServer.CsScript.Action
 {
-    public class LoginData
-    {
-        public string Username;
-        public string Password;
-    }
-
-    public class LoginDataRes
-    {
-        public string SessionId;
-
-        public UserData UserData;
-    }
-
     public class Action1002 : BaseStruct
     {
         private LoginData _loginData;
-        private GameUser _gameUser;
 
         private UserData _userData;
         private LoginDataRes _loginDataRes;
@@ -42,7 +29,7 @@ namespace GameServer.CsScript.Action
             //Current = GameSession.CreateNew(Guid.NewGuid());
             //Current.SetExpired();
 
-			Test();
+			//Test();
             User user;
             ShareCacheStruct<User> userCache;
             if(this.FindUser(out user, out userCache))
@@ -66,7 +53,14 @@ namespace GameServer.CsScript.Action
             }
 
             _loginDataRes = new LoginDataRes() { SessionId = Current.SessionId, UserData = _userData };
+            CharacterManager.AddCharacter(Current.UserId, new CharacterSyncData() { UserId = Current.UserId });
             return true;
+        }
+
+        public override void TakeActionAffter(bool state)
+        {
+            base.TakeActionAffter(state);
+            //CharacterManager.Send(GameSession.GetOnlineAll());
         }
 
         private bool FindUser(out User user, out ShareCacheStruct<User> userCache)

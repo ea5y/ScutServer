@@ -10,5 +10,8 @@ namespace GameServer.CsScript.Action
     {
         public const Int16 Register = 1001;
         public const Int16 Login = 1002;
+        public const Int16 SpawnPlayer = 1003;
+
+        public const Int16 CastSpawnPlayer = 2001;
     }
 }

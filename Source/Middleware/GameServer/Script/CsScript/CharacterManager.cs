@@ -1,4 +1,7 @@
-﻿using System;
+﻿using GameServer.CsScript.Action;
+using GameServer.Script.CsScript.Cast;
+using ProtoBuf;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,41 +9,90 @@ using System.Threading.Tasks;
 using ZyGames.Framework.Common.Serialization;
 using ZyGames.Framework.Game.Contract;
 using ZyGames.Framework.RPC.Sockets;
+using GameServer.CsScript.CommunicationDataStruct;
 
-namespace GameServer.Script.CsScript
+namespace GameServer.CsScript
 {
-    public class CharacterSyncData
-    {
-    }
-
     public class CharacterManager
     {
         private static Dictionary<int, CharacterSyncData> _charaDic = new Dictionary<int, CharacterSyncData>();
-
+        
         public static void AddCharacter(int key, CharacterSyncData value)
         {
             _charaDic.Add(key, value);
+            Console.WriteLine("Add Character UserId: {0}.\nCurrent character count: {1}", key, _charaDic.Count);
         }
 
-        public static void RemoveCharacter(int key)
+        public static CharacterSyncData RemoveCharacter(int key)
         {
+            Console.WriteLine("Remove character");
+            var result = _charaDic[key];
             _charaDic.Remove(key);
+            Console.WriteLine("Remove Character UserId: {0}.\nCurrent character count: {1}", key, _charaDic.Count);
+            return result;
         }
 
-        public static void Send(GameSession[] sessions, int ignoreUserId)
+        public static CharacterSyncDataSet GetCharaSyncDataSet()
         {
+            var result = new CharacterSyncDataSet();
+            result.CharaSyncDataList = new List<CharacterSyncData>();
+            foreach(var chara in _charaDic)
+            {
+                result.CharaSyncDataList.Add(_charaDic[chara.Key]);
+            }
+
+            return result;
+        }
+
+        public static void Spawn(IEnumerable<GameSession> sessions)
+        {
+            Console.WriteLine("GetSession count: {0}", sessions.Count<GameSession>());
+            var charaSet = GetCharaSyncDataSet();
+            var buffer = PackCastPackage<CharacterSyncDataSet>(CastID.SpawnPlayer, charaSet);
             foreach(var session in sessions)
             {
-                if (session.UserId == ignoreUserId)
-                    continue;
-
-                
-                byte[] data = Encoding.UTF8.GetBytes("This is sent to the client data.");
-                session.SendAsync(OpCode.Text, data, 0, data.Length, asyncResult =>
+                var task = session.SendAsync(OpCode.Text, buffer, 0, buffer.Length, asyncResult =>
                         {
                             Console.WriteLine("The results of data send:{0}", asyncResult.Result == ResultCode.Success ? "ok" : "fail");
-                        }).Wait();
+                        });
             }
+        }
+
+        public static void Recycle(GameSession session)
+        {
+            var sessions = GameSession.GetOnlineAll();
+            var data = RemoveCharacter(session.UserId);
+            var buffer = PackCastPackage(CastID.RecyclePlayer, data);
+            foreach(var s in sessions)
+            {
+                if (s.UserId == session.UserId)
+                    continue;
+
+                var task = s.SendAsync(OpCode.Text, buffer, 0, buffer.Length, asyncResult =>
+                        {
+                            Console.WriteLine("The results of data send:{0}", asyncResult.Result == ResultCode.Success ? "ok" : "fail");
+                        });
+            }
+
+        }
+
+        public static byte[] PackCastPackage<T>(int actionId, T obj)
+        {
+            //Console.WriteLine("Cast to UserId: {0}", session.UserId);
+            byte[] head = ProtoBufUtils.Serialize(new PacageCastHead() { ActionId = actionId });
+            byte[] body = ProtoBufUtils.Serialize(obj);
+
+            byte[] headLen = BitConverter.GetBytes(head.Length);
+            byte[] bodyLen = BitConverter.GetBytes(body.Length);
+
+            byte[] buffer = new byte[headLen.Length + head.Length + bodyLen.Length + body.Length];
+
+            Buffer.BlockCopy(headLen, 0, buffer, 0, headLen.Length);
+            Buffer.BlockCopy(head, 0, buffer, headLen.Length, head.Length);
+            Buffer.BlockCopy(bodyLen, 0, buffer, headLen.Length + head.Length, bodyLen.Length);
+            Buffer.BlockCopy(body, 0, buffer, headLen.Length + head.Length + bodyLen.Length, body.Length);
+
+            return buffer;
         }
     }
 }

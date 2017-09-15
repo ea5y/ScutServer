@@ -27,6 +27,8 @@ using ZyGames.Framework.Game.Runtime;
 using ZyGames.Framework.Game.Service;
 using ZyGames.Framework.RPC.Sockets;
 using ZyGames.Framework.Script;
+using GameServer.CsScript;
+using GameServer.Script.CsScript.Cast;
 
 namespace Game.Script
 {
@@ -60,6 +62,9 @@ namespace Game.Script
         protected override void OnDisconnected(GameSession session)
         {
             Console.WriteLine("客户端UserId:[{0}]已与服务器断开", session.RemoteAddress);
+            //CharacterManager.RemoveCharacter(session.UserId);
+            //CharacterManager.Recycle(session);
+            DispatchCast.Send(new CastRecyclePlayer(session));
             base.OnDisconnected(session);
         }
 

@@ -75,6 +75,8 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Script\CsScript\Action\Action1002.cs" />
     <Compile Include="Script\CsScript\Action\Action1003.cs" />
+    <Compile Include="Script\CsScript\Action\Action1005.cs" />
+    <Compile Include="Script\CsScript\Action\Action1004.cs" />
     <Compile Include="Script\CsScript\Action\ActionID.cs" />
     <Compile Include="Script\CsScript\Cast\CastID.cs" />
     <Compile Include="Script\CsScript\Cast\DispatchCast.cs" />

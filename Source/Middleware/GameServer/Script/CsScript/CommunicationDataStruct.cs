@@ -50,4 +50,59 @@ namespace GameServer.CsScript.CommunicationDataStruct
         public double PosZ;
     }
 
+    [ProtoContract]
+    public class SyncPositionDataSet
+    {
+        [ProtoMember(1)]
+        public List<SyncPositionData> SyncPositionDataList;
+    }
+
+    [ProtoContract]
+    public class SyncPositionData
+    {
+        [ProtoMember(1)]
+        public int UserId;
+        [ProtoMember(2)]
+        public double PosX;
+        [ProtoMember(3)]
+        public double PosY;
+        [ProtoMember(4)]
+        public double PosZ;
+
+        [ProtoMember(5)]
+        public double DirX;
+        [ProtoMember(6)]
+        public double DirZ;
+    }
+
+    public class PositionData
+    {
+        public double PosX;
+        public double PosY;
+        public double PosZ;
+
+        public double DirX;
+        public double DirZ;
+    }
+
+    [ProtoContract]
+    public class SyncStateDataSet
+    {
+        [ProtoMember(1)]
+        public List<SyncStateData> SyncStateDataList;
+    }
+
+    [ProtoContract]
+    public class SyncStateData
+    {
+        [ProtoMember(1)]
+        public int UserId;
+        [ProtoMember(2)]
+        public string State;
+    }
+
+    public class StateData
+    {
+        public string State;
+    }
 }

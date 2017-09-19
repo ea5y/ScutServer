@@ -16,6 +16,9 @@ namespace GameServer.CsScript
     public class CharacterManager
     {
         private static Dictionary<int, CharacterSyncData> _charaDic = new Dictionary<int, CharacterSyncData>();
+
+        private static Dictionary<GameSession, SyncPositionData> _syncPosDic = new Dictionary<GameSession, SyncPositionData>();
+        private static Dictionary<GameSession, SyncStateData> _syncStateDic = new Dictionary<GameSession, SyncStateData>();
         
         public static void AddCharacter(int key, CharacterSyncData value)
         {
@@ -74,6 +77,87 @@ namespace GameServer.CsScript
                         });
             }
 
+        }
+
+        public static SyncPositionDataSet GetSyncPositionDataSet(GameSession session)
+        {
+            var result = new SyncPositionDataSet();
+            result.SyncPositionDataList = new List<SyncPositionData>();
+            foreach(var pos in _syncPosDic)
+            {
+                //if (session == pos.Key)
+                //    continue;
+                //pos.Value.UserId = session.UserId;
+                result.SyncPositionDataList.Add(pos.Value);
+            }
+
+            return result;
+        }
+
+        public static void SyncPosition(GameSession session, SyncPositionData data)
+        {
+            SyncPositionData pData;
+            if(_syncPosDic.TryGetValue(session, out pData))
+            {
+                //pData = data;
+                _syncPosDic[session] = data;
+            }
+            else
+            {
+                _syncPosDic.Add(session, data);
+            }
+
+            var syncPosDataSet = GetSyncPositionDataSet(session);
+            var buffer = PackCastPackage(CastID.SyncPlayerPosition, syncPosDataSet);
+
+            foreach(var sync in _syncPosDic)
+            {
+                if (sync.Key == session)
+                    continue;
+                SendCast(sync.Key, buffer);
+            }
+        }
+
+        private static SyncStateDataSet GetSyncStateDataSet()
+        {
+            var result = new SyncStateDataSet();
+            result.SyncStateDataList = new List<SyncStateData>();
+            foreach(var state in _syncStateDic)
+            {
+                result.SyncStateDataList.Add(state.Value);
+            }
+            return result;
+        }
+
+        public static void SyncState(GameSession session, SyncStateData data)
+        {
+            SyncStateData sData;
+            if(_syncStateDic.TryGetValue(session, out sData))
+            {
+                _syncStateDic[session] = data;
+            }
+            else
+            {
+                _syncStateDic.Add(session, data);
+            }
+
+            var syncStateDataSet = GetSyncStateDataSet();
+            var buffer = PackCastPackage(CastID.SyncPlayerState, syncStateDataSet);
+
+            foreach(var sync in _syncStateDic)
+            {
+                if (sync.Key == session)
+                    continue;
+                SendCast(sync.Key, buffer);
+            }
+        }
+
+        public static void SendCast(GameSession session, byte[] buffer)
+        {
+            var task = session.SendAsync(OpCode.Text, buffer, 0, buffer.Length, asyncResult =>
+                    {
+                        Console.WriteLine("The results of data send:{0}", asyncResult.Result == ResultCode.Success ? "ok" : "fail");
+                    });
         }
 
         public static byte[] PackCastPackage<T>(int actionId, T obj)

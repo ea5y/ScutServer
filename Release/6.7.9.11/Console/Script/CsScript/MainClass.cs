@@ -24,7 +24,11 @@ THE SOFTWARE.
 using System;
 using ZyGames.Framework.Game.Contract;
 using ZyGames.Framework.Game.Runtime;
+using ZyGames.Framework.Game.Service;
+using ZyGames.Framework.RPC.Sockets;
 using ZyGames.Framework.Script;
+using GameServer.CsScript;
+using GameServer.Script.CsScript.Cast;
 
 namespace Game.Script
 {
@@ -36,11 +40,38 @@ namespace Game.Script
 
         protected override void OnStartAffer()
         {
+            ActionFactory.SetActionIgnoreAuthorize(100);
         }
 
         protected override void OnServiceStop()
         {
             GameEnvironment.Stop();
+        }
+
+        protected override void OnRequested(ActionGetter actionGetter, BaseGameResponse response)
+        {
+            Console.WriteLine("Client {0} request action {1} ", actionGetter.GetSessionId(), actionGetter.GetActionId());
+        }
+
+        protected override void OnConnectCompleted(object sender, ConnectionEventArgs e)
+        {
+            Console.WriteLine("客户端IP:[{0}]已与服务器连接成功", e.Socket.RemoteEndPoint);
+            base.OnConnectCompleted(sender, e);
+        }
+
+        protected override void OnDisconnected(GameSession session)
+        {
+            Console.WriteLine("客户端UserId:[{0}]已与服务器断开", session.RemoteAddress);
+            //CharacterManager.RemoveCharacter(session.UserId);
+            //CharacterManager.Recycle(session);
+            DispatchCast.Send(new CastRecyclePlayer(session));
+            base.OnDisconnected(session);
+        }
+
+        protected override void OnHeartbeat(GameSession session)
+        {
+            Console.WriteLine("{0}>>Hearbeat package: {1} userid {2} session count {3}", DateTime.Now.ToString("HH:mm:ss"), session.RemoteAddress, session.UserId, GameSession.Count);
+            base.OnHeartbeat(session);
         }
     }
 }
